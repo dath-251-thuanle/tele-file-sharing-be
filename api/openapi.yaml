@@ -295,11 +295,18 @@ paths:
       requestBody:
           required: true
       content:
+        paramethers:
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramUsername"
+        requestBody:
+          required: true
+        content:
           application/json:
             schema:
               $ref: "#/components/schemas/CreateShareRequest"
 
       responses:
+        responses:
         "201":
           description: Tạo chia sẻ thành công. Trả về thông tin share.
           content:
@@ -727,6 +734,7 @@ components:
           description: Thời gian hết hạn (null hoặc bỏ qua là vĩnh viễn).
           example: "2025-12-31T23:59:59Z"
 
+          
     ShareRevokeResponse:
       type: object
       description: Phản hồi khi thu hồi share thành công.
