@@ -282,7 +282,7 @@ paths:
 
   /v1/shares:
     post:
-      summary: Tạo 1 chia sẻ mới cho file 
+      summary: Tạo 1 chia sẻ mới cho file - Test push lên branch tin 
       description: 
         Tạo một link chia sẻ mới cho một file.
         Người dùng phải là chủ sở hữu của file.
