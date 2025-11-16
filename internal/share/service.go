@@ -143,4 +143,9 @@ func (s *shareService) GetMetadata(ctx context.Context, id int64) (*model.ShareM
 	}, nil
 }
 
+	if reports == nil {
+		reports = []model.Share{} // Trả về mảng rỗng thay vì null
+	}
 
+	return reports, nil
+}

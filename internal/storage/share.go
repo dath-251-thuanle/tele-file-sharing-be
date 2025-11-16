@@ -16,6 +16,7 @@ type ShareRepository interface {
 	
     // GetShareByID lấy thông tin share (nếu cần dùng sau này)
     GetShareByID(ctx context.Context, shareID int64) (*model.Share, error)
+<<<<<<< HEAD
 	
 
 	ListSharesByOwnerUserID(ctx context.Context, ownerUserID int64, limit, offset int) ([]model.Share, error)
@@ -34,6 +35,12 @@ type ShareRepository interface {
 
   GetShareMetadata(ctx context.Context, id int64) (*model.ShareMetadata, error)
 
+=======
+
+	ListSharesByOwnerUserID(ctx context.Context, ownerUserID int64, limit, offset int) ([]model.Share, error)
+
+	GetPasswordHash(ctx context.Context, shareID int64) (string, error)
+>>>>>>> 85f1b0c (feat: implement list shares for owner endpoint)
 }
 
 type postgresShareRepository struct {
@@ -88,6 +95,10 @@ func (r *postgresShareRepository) GetPasswordHash(ctx context.Context, shareID i
 	return passwordHash, nil
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 85f1b0c (feat: implement list shares for owner endpoint)
 // ListSharesByOwnerUserID retrieves all shares for a user with pagination
 func (r *postgresShareRepository) ListSharesByOwnerUserID(ctx context.Context, ownerUserID int64, limit, offset int) ([]model.Share, error) {
 	const query = `
@@ -114,6 +125,7 @@ func (r *postgresShareRepository) ListSharesByOwnerUserID(ctx context.Context, o
 	}
 
 	return shares, nil
+<<<<<<< HEAD
 }
 
 // GetActiveFilePathByShareID trả về path và filename
@@ -213,3 +225,6 @@ func (r *postgresShareRepository) GetShareMetadata(ctx context.Context, id int64
         User:  &u,
     }, nil
 }
+=======
+}
+>>>>>>> 85f1b0c (feat: implement list shares for owner endpoint)

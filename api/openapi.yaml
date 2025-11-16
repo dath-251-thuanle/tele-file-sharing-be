@@ -281,19 +281,64 @@ paths:
                 $ref: "#/components/schemas/Error"
 
   /v1/shares:
+    get:
+      summary: Liệt kê các chia sẻ của người gửi
+      description: |
+        Trả về danh sách tất cả các link chia sẻ mà người dùng hiện tại đã tạo.
+        Hỗ trợ phân trang để hiển thị kết quả.
+        Shares được sắp xếp theo thời gian tạo (mới nhất trước).
+      tags:
+        - Shares
+      parameters:
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramUsername"
+        - name: limit
+          in: query
+          description: Số lượng shares tối đa trả về (mặc định 20, tối đa 100)
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          description: Vị trí bắt đầu (mặc định 0)
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Thành công – danh sách shares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Share"
+        "401":
+          description: Unauthorized – Thiếu hoặc sai authentication token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     post:
-      summary: Tạo 1 chia sẻ mới cho file 
-      description: 
-        Tạo một link chia sẻ mới cho một file.
+      summary: Tạo 1 chia sẻ mới cho file
+      description: Tạo một link chia sẻ mới cho một file.
         Người dùng phải là chủ sở hữu của file.
         Backend sẽ tự động tạo một 'hash' duy nhất cho link.
-      tags: 
+      tags:
         - Shares
       paramethers:
         - $ref: "#/components/parameters/TelegramUserId"
         - $ref: "#/components/parameters/TelegramUsername"
       requestBody:
-          required: true
+        required: true
       content:
         paramethers:
         - $ref: "#/components/parameters/TelegramUserId"
@@ -304,6 +349,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/CreateShareRequest"
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateShareRequest"
 
       responses:
         responses:

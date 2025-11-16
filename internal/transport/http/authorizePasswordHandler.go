@@ -1,11 +1,12 @@
 package http
+
 import (
 	"net/http"
 	"strconv"
+
 	"file-sharing/internal/share"
+
 	"github.com/gin-gonic/gin"
-	"file-sharing/internal/files"
-	"errors"
 )
 
 type authorizePasswordHandler struct {
@@ -23,13 +24,13 @@ func (h *authorizePasswordHandler) HandleAuthorizePassword(c *gin.Context) {
 	}
 	// Lấy share ID và plain password từ URL
 	shareID := c.Param("id")
-	id , err := strconv.ParseInt(shareID, 10, 64)
+	id, err := strconv.ParseInt(shareID, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Share ID"})
 		return
 	}
 	var req authorizeRequest
-	if err := c.ShouldBindJSON(&req);  err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Password is required"})
 		return
 	}
@@ -37,7 +38,7 @@ func (h *authorizePasswordHandler) HandleAuthorizePassword(c *gin.Context) {
 	// Gọi Service để xác thực mật khẩu
 	token, err := h.aService.AuthorizeSharePasswordAndIssueToken(c.Request.Context(), id, req.Password)
 	if err != nil {
-		if errors.Is(err, files.InvalidPasswordError()) {
+		if err.Error() == "invalid password" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
 			return
 		}
