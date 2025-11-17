@@ -61,6 +61,10 @@ func (r *postgresShareRepository) GetShareByID(ctx context.Context, shareID int6
     const query = `SELECT * FROM shares WHERE id = $1`
     var share model.Share
     err := r.db.GetContext(ctx, &share, query, shareID)
+	if err != nil {
+		log.Printf("Failed to get share with ID %d: %v", shareID, err)
+	}
+
     return &share, err
 }
 

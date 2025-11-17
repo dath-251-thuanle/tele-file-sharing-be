@@ -67,7 +67,7 @@ func main() {
 			authed.GET("/v1/files", listFilesHandler)
             // report endpoints
             authed.POST("/v1/files/:file_id/report-complete", reportCompleteHandler)
-            authed.GET("/v1/files/:file_id/report", getRaeportHandler)
+            authed.GET("/v1/files/:file_id/report", getReportHandler)
             authed.GET("/v1/upload-reports", listReportsHandler)
 			authed.POST("/v1/shares/:id/revoke", shareHandler.HandleRevoke)
 			// authorize password endpoint
