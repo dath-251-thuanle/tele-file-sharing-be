@@ -1,4 +1,46 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # Dịch vụ của bạn ở đây
+  postgres:
+    image: postgres:16-alpine
+    container_name: file_sharing_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=file-sharing
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d file-sharing"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      shm_size: 256m
+    container_name: file_sharing_app
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://user:password@postgres:5432/file-sharing?sslmode=disable
+      - HTTP_SERVER_ADDRESS=:8080
+      - GIN_MODE=release
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

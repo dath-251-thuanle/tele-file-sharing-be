@@ -24,3 +24,6 @@ func NewUploadReportNotFoundError() error {
 func NewDatabaseError() error {
     return &ServiceError{Code: "database_error", Message: "internal database error"}
 }
+func InvalidPasswordError() error{
+    return &ServiceError{Code: "ERR_INVALID_PASSWORD", Message: "the provided password is incorrect"}
+}

@@ -281,23 +281,74 @@ paths:
                 $ref: "#/components/schemas/Error"
 
   /v1/shares:
+    get:
+      summary: Liệt kê các chia sẻ của người gửi
+      description: |
+        Trả về danh sách tất cả các link chia sẻ mà người dùng hiện tại đã tạo.
+        Hỗ trợ phân trang để hiển thị kết quả.
+        Shares được sắp xếp theo thời gian tạo (mới nhất trước).
+      tags:
+        - Shares
+      parameters:
+        - $ref: "#/components/parameters/TelegramUserId"
+        - $ref: "#/components/parameters/TelegramUsername"
+        - name: limit
+          in: query
+          description: Số lượng shares tối đa trả về (mặc định 20, tối đa 100)
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          description: Vị trí bắt đầu (mặc định 0)
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Thành công – danh sách shares
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Share"
+        "401":
+          description: Unauthorized – Thiếu hoặc sai authentication token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
     post:
+<<<<<<< HEAD
       summary: Tạo 1 chia sẻ mới cho file - Test push lên branch tin 
       description: 
         Tạo một link chia sẻ mới cho một file.
+=======
+      summary: Tạo 1 chia sẻ mới cho file
+      description: Tạo một link chia sẻ mới cho một file.
+>>>>>>> dev
         Người dùng phải là chủ sở hữu của file.
         Backend sẽ tự động tạo một 'hash' duy nhất cho link.
-      tags: 
+      tags:
         - Shares
       paramethers:
         - $ref: "#/components/parameters/TelegramUserId"
         - $ref: "#/components/parameters/TelegramUsername"
       requestBody:
-          required: true
+        required: true
       content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateShareRequest"
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateShareRequest"
 
       responses:
         "201":
@@ -325,7 +376,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-
   /api/v1/shares/{id}/revoke:
     post:
       summary: Thu hồi link chia sẻ
@@ -347,19 +397,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ShareRevokeResponse"  # <--- Đã sửa dòng này
+                $ref: "#/components/schemas/ShareRevokeResponse"
         "400":
           description: Lỗi dữ liệu đầu vào
           content:
-             application/json:
-               schema:
-                 $ref: "#/components/schemas/Error"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "404":
           description: Không tìm thấy hoặc không có quyền
           content:
-             application/json:
-               schema:
-                 $ref: "#/components/schemas/Error"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   parameters:
@@ -428,7 +478,7 @@ components:
         updated_at:
           type: string
           format: date-time
-    
+
     Error:
       type: object
       properties:
@@ -581,7 +631,7 @@ components:
           format: date-time
           description: Thời gian cập nhật lần cuối
           example: "2025-11-12T10:30:00Z"
-  
+
     FileInitResponse:
       type: object
       properties:
@@ -605,7 +655,7 @@ components:
           type: string
           format: date-time
           example: "2025-11-09T14:00:00Z"
-    
+
     Share:
       type: object
       description: Thông tin về liên kết chia sẻ.
@@ -626,6 +676,14 @@ components:
           type: string
           description: Chuỗi định danh duy nhất của link share.
           example: "a1b2c3d4"
+        require_password:
+          type: boolean
+          description: Yêu cầu mật khẩu để tải file.
+          example: true
+        hash_password:
+          type: string
+          description: Mật khẩu đã được hash (sẽ không trả về cho client).
+          example: "$2a$10$..."
         revoked:
           type: boolean
           description: Trạng thái thu hồi (true là đã thu hồi).
@@ -651,6 +709,11 @@ components:
           format: int64
           description: ID của file cần chia sẻ.
           example: 101
+        password:
+          type: string
+          format: password
+          description: Mật khẩu tùy chọn cho link share.
+          example: "my-secret-pass-123"
         expires_at:
           type: string
           format: date-time
@@ -672,3 +735,49 @@ components:
         status:
           type: string
           example: "revoked"
+  /v1/shares/:id/authorize:
+    post:
+      summary: Xác thực mật khẩu cho link chia sẻ
+      description: |
+        Cho phép người dùng xác thực mật khẩu để truy cập link chia sẻ được bảo vệ.
+        Nếu mật khẩu đúng, hệ thống sẽ trả về token truy cập tạm thời.
+      tags:
+        - Authorization
+      parameters:
+        - name: id
+          in: URL
+          required: true
+          description: ID của link chia sẻ
+          schema:
+            type: integer
+            format: int64
+        - name: password
+          in: URL
+          required: true
+          description: Mật khẩu để xác thực
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Thành công – trả về token truy cập tạm thời
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: Token truy cập tạm thời
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "400":
+          description: Dữ liệu đầu vào không hợp lệ hoặc mật khẩu sai
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Lỗi hệ thống
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

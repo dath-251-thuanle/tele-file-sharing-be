@@ -43,6 +43,8 @@ func NewFileRepository(db *sqlx.DB) FileRepository {
 	return &postgresFileRepository{db: db}
 }
 
+
+// Implementations 
 // GetFileByID retrieves a file by its ID
 func (r *postgresFileRepository) GetFileByID(ctx context.Context, fileID int64) (*model.FileWithOwner, error) {
 	const query = `

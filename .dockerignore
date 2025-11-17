@@ -1,0 +1,59 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+docs/
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Environment files (will be copied selectively)
+.env
+*.env.local
+
+# Development files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+
+# Test files
+*_test.go
+test/
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# Dependency directories
+vendor/
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# Reports (if not needed in production)
+reports/

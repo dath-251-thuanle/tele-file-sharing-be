@@ -1,0 +1,51 @@
+# Production Dockerfile with optimizations
+FROM golang:1.23-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata make
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files first for better caching
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download && go mod verify
+
+# Copy source code
+COPY . .
+
+# Build the application with optimizations
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags='-w -s -extldflags "-static"' \
+    -a -installsuffix cgo \
+    -o main ./cmd/api
+
+# Final stage - distroless image for security
+FROM gcr.io/distroless/static:nonroot
+
+# Copy timezone data
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+
+# Copy CA certificates
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+# Set working directory
+WORKDIR /app
+
+# Copy binary from builder stage
+COPY --from=builder /app/main .
+
+# Copy configuration files
+COPY --from=builder /app/env ./env
+COPY --from=builder /app/api ./api
+
+# Use nonroot user (uid 65532)
+USER nonroot:nonroot
+
+# Expose port
+EXPOSE 8080
+
+# Run the application
+ENTRYPOINT ["./main"]

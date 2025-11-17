@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"file-sharing/internal/share"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,7 +39,7 @@ func (h *ShareHandler) HandleRevoke(c *gin.Context) {
 	// Gọi Service
 	err = h.service.RevokeShare(c.Request.Context(), shareID, user.ID)
 	if err != nil {
-        // Nếu lỗi là do không tìm thấy hoặc không đúng chủ sở hữu
+		// Nếu lỗi là do không tìm thấy hoặc không đúng chủ sở hữu
 		if err.Error() == "share not found or access denied" {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
@@ -53,4 +54,38 @@ func (h *ShareHandler) HandleRevoke(c *gin.Context) {
 		"share_id": shareID,
 		"status":   "revoked",
 	})
+}
+
+// GET /v1/shares
+func (h *ShareHandler) HandleListShares(c *gin.Context) {
+	// 1. Lấy User từ context (do AuthMiddleware nạp vào)
+	user, exists := GetUserFromContext(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// 2. Lấy tham số pagination (giống như ListUploadReportsHandler)
+	limit := 20
+	offset := 0
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 100 {
+			limit = parsed
+		}
+	}
+	if o := c.Query("offset"); o != "" {
+		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {
+			offset = parsed
+		}
+	}
+
+	// 3. Gọi Service
+	shares, err := h.service.ListShares(c.Request.Context(), user.ID, limit, offset)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+
+	// 4. Trả về kết quả
+	c.JSON(http.StatusOK, shares)
 }

@@ -39,12 +39,17 @@ func main() {
 	// ---- Khởi tạo Service ----
     shareService := share.NewShareService(shareRepo)
 
+	// --- Khởi tạo Auth Service ---
+	authService := share.NewAuthService(shareRepo)
+
 	// ---- 4. Khởi tạo Handlers & Middlewares ----
 	userHandler := http.NewUserHandler()
 	authMiddleware := http.AuthMiddleware(userRepo)
 	fileHandler := http.InitFileUploadHandler(db.DB)
 	listFilesHandler := http.ListUserFilesHandler(db.DB)
 	shareHandler := http.NewShareHandler(shareService)
+	// Authoize Password Handler
+	authorizePasswordHandler := http.NewAuthorizePasswordHandler(authService)
     
     // Report handlers (register these so client endpoints exist)
     reportCompleteHandler := http.ReportUploadCompleteHandler(db.DB)
@@ -62,9 +67,13 @@ func main() {
 			authed.GET("/v1/files", listFilesHandler)
             // report endpoints
             authed.POST("/v1/files/:file_id/report-complete", reportCompleteHandler)
-            authed.GET("/v1/files/:file_id/report", getReportHandler)
+            authed.GET("/v1/files/:file_id/report", getRaeportHandler)
             authed.GET("/v1/upload-reports", listReportsHandler)
 			authed.POST("/v1/shares/:id/revoke", shareHandler.HandleRevoke)
+			// authorize password endpoint
+			authed.POST("/v1/shares/:id/authorize", authorizePasswordHandler.HandleAuthorizePassword)
+
+			authed.GET("/v1/shares", shareHandler.HandleListShares)
 		}
 	}
 
