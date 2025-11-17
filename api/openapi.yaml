@@ -290,7 +290,7 @@ paths:
       tags: 
         - Shares
       paramethers:
-        - $ref: "#/components/parameters/Tel
+        - $ref: "#/components/parameters/TelegramUserId"
         - $ref: "#/components/parameters/TelegramUsername"
       requestBody:
           required: true
