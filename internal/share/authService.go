@@ -3,11 +3,15 @@ package share
 import (
 	"context"
 	"file-sharing/internal/storage"
+	"golang.org/x/crypto/bcrypt"
+	"github.com/golang-jwt/jwt/v5"
+	"time"
+	
 )
 
 type AuthServices interface{
 // Hàm AuthorizeSharePassword trả về token truy cập tạm thời nếu mật khẩu đúng
-	AuthorizeSharePasswordAndIssueToken(ctx context.Context, shareID int64, password string) error
+	AuthorizeSharePasswordAndIssueToken(ctx context.Context, shareID int64, password string) (token string, err error)
 }
 
 type AuthService struct {
@@ -36,21 +40,21 @@ func GenerateAccessToken(shareID int64) (string, error) {
 	return token.SignedString(secretKey)
 }
 
-func (a *AuthService) AuthorizeSharePasswordAndIssueToken(ctx context.Context, shareID int64, password string) error {
+func (a *AuthService) AuthorizeSharePasswordAndIssueToken(ctx context.Context, shareID int64, password string) (token string, err error) {
 	// Lấy hash mật khẩu từ repository
 	passwordHash, err := a.repo.GetPasswordHash(ctx, shareID)
 	if err != nil {
-		return err
+		return "", err
 	}
 	
 	// So sánh mật khẩu đã mã hóa với mật khẩu cung cấp
 	if !CheckPasswordHash(password, passwordHash) {
-		return InvalidPasswordError()
+		return "", err
 	}
 	// Nếu đúng, trả về một token để truy cập tạm thời
-	token, err := GenerateAccessToken(shareID)
+	token, err = GenerateAccessToken(shareID)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return token
+	return token, nil
 }

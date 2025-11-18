@@ -89,3 +89,32 @@ func (h *ShareHandler) HandleListShares(c *gin.Context) {
 	// 4. Trả về kết quả
 	c.JSON(http.StatusOK, shares)
 }
+
+// GET /v1/shares/:id
+func (h *ShareHandler) HandleGetShareMetadata(c *gin.Context) {
+    // 1. Lấy User từ context (AuthMiddleware đã nạp vào)
+    _, exists := GetUserFromContext(c)
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+        return
+    }
+
+    // 2. Lấy share ID từ URL
+    idStr := c.Param("id")
+    shareID, err := strconv.ParseInt(idStr, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid share ID"})
+        return
+    }
+
+    // 3. Gọi Service để lấy metadata
+    data, err := h.service.GetMetadata(c.Request.Context(), shareID)
+    if err != nil {
+        // Nếu lỗi là share không tồn tại
+        c.JSON(http.StatusNotFound, gin.H{"error": "Share not found"})
+        return
+    }
+
+    // 4. Trả về JSON
+    c.JSON(http.StatusOK, data)
+}

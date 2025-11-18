@@ -17,10 +17,15 @@ type ShareRepository interface {
 	
     // GetShareByID lấy thông tin share (nếu cần dùng sau này)
     GetShareByID(ctx context.Context, shareID int64) (*model.Share, error)
+	
 
 	ListSharesByOwnerUserID(ctx context.Context, ownerUserID int64, limit, offset int) ([]model.Share, error)
 
-	GetPasswordHash(ctx context.Context, shareID int64) (string, error)
+  // Lấy hash mật khẩu của share
+  GetPasswordHash(ctx context.Context, shareID int64) (string, error)
+
+  GetShareMetadata(ctx context.Context, id int64) (*model.ShareMetadata, error)
+
 }
 
 type postgresShareRepository struct {
@@ -106,4 +111,39 @@ func (r *postgresShareRepository) ListSharesByOwnerUserID(ctx context.Context, o
 	}
 
 	return shares, nil
+}
+
+
+func (r *postgresShareRepository) GetShareMetadata(ctx context.Context, id int64) (*model.ShareMetadata, error) {
+    const query = `
+    SELECT
+        sh.id, sh.file_id, sh.owner_user_id, sh.hash, sh.require_password, sh.revoked, sh.expires_at, sh.created_at,
+        f.id, f.owner_user_id, f.object_key, f.filename, f.size, f.mime, f.status, f.created_at, f.updated_at,
+        u.id, u.username, u.telegram_user_id, u.created_at
+    FROM shares sh
+    JOIN files f ON sh.file_id = f.id
+    JOIN users u ON sh.owner_user_id = u.id
+    WHERE sh.id = $1
+    LIMIT 1;
+    `
+    row := r.db.QueryRowxContext(ctx, query, id)
+
+    var sh model.Share
+    var f model.FileWithOwner
+    var u model.User
+
+    err := row.Scan(
+        &sh.ID, &sh.FileID, &sh.OwnerUserID, &sh.Hash, &sh.RequirePassword, &sh.Revoked, &sh.ExpiresAt, &sh.CreatedAt,
+        &f.ID, &f.OwnerUserID, &f.ObjectKey, &f.Filename, &f.Size, &f.Mime, &f.Status, &f.CreatedAt, &f.UpdatedAt,
+        &u.ID, &u.Username, &u.TelegramID, &u.CreatedAt,
+    )
+    if err != nil {
+        return nil, err
+    }
+
+    return &model.ShareMetadata{
+        Share: &sh,
+        File:  &f,
+        User:  &u,
+    }, nil
 }

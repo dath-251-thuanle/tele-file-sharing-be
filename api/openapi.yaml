@@ -775,3 +775,55 @@ components:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /v1/shares/{id}:
+    get:
+      summary: Lấy metadata của share
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Metadata của share
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShareMetadataResponse"
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+components:
+  schemas:
+    FileMetadata:
+      type: object
+      properties:
+        id: { type: integer }
+        filename: { type: string }
+        object_key: { type: string }
+        size: { type: integer }
+        mime: { type: string }
+        status: { type: string }
+
+    UserMinimal:
+      type: object
+      properties:
+        id: { type: integer }
+        username: { type: string }
+        telegram_user_id: { type: integer }
+
+    ShareMetadataResponse:
+      type: object
+      properties:
+        id: { type: integer }
+        hash: { type: string }
+        revoked: { type: boolean }
+        expires_at: { type: string, nullable: true }
+        created_at: { type: string }
+        file: { $ref: "#/components/schemas/FileMetadata" }
+        owner: { $ref: "#/components/schemas/UserMinimal" }
+
+

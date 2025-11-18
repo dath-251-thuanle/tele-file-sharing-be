@@ -5,6 +5,7 @@ import (
 	"file-sharing/internal/share"
 	"github.com/gin-gonic/gin"
 	"file-sharing/internal/files"
+	"errors"
 )
 
 type authorizePasswordHandler struct {
@@ -34,7 +35,7 @@ func (h *authorizePasswordHandler) HandleAuthorizePassword(c *gin.Context) {
 	}
 
 	// Gọi Service để xác thực mật khẩu
-	token, err = h.aService.AuthorizeSharePasswordAndIssueToken(c.Request.Context(), id, req.Password)
+	token, err := h.aService.AuthorizeSharePasswordAndIssueToken(c.Request.Context(), id, req.Password)
 	if err != nil {
 		if errors.Is(err, files.InvalidPasswordError()) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})

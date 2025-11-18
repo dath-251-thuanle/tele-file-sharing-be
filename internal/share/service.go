@@ -11,6 +11,8 @@ type Service interface {
 	RevokeShare(ctx context.Context, shareID int64, userID int64) error
 
 	ListShares(ctx context.Context, userID int64, limit, offset int) ([]model.Share, error)
+
+	GetMetadata(ctx context.Context, id int64) (*model.ShareMetadataResponseDTO, error)
 }
 
 type shareService struct {
@@ -40,4 +42,32 @@ func (s *shareService) ListShares(ctx context.Context, userID int64, limit, offs
 	}
 
 	return reports, nil
+}
+
+func (s *shareService) GetMetadata(ctx context.Context, id int64) (*model.ShareMetadataResponseDTO, error) {
+	md, err := s.repo.GetShareMetadata(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ShareMetadataResponseDTO{
+		ID:        md.Share.ID,
+		Hash:      md.Share.Hash,
+		Revoked:   md.Share.Revoked,
+		ExpiresAt: md.Share.ExpiresAt,
+		CreatedAt: md.Share.CreatedAt,
+		File: model.FileMetadataDTO{
+			ID:        md.File.ID,
+			Filename:  md.File.Filename,
+			ObjectKey: md.File.ObjectKey,
+			Size:      md.File.Size,
+			Mime:      md.File.Mime,
+			Status:    md.File.Status,
+		},
+		Owner: model.UserMinimalDTO{
+			ID:         md.User.ID,
+			Username:   md.User.Username,
+			TelegramID: md.User.TelegramID,
+		},
+	}, nil
 }
