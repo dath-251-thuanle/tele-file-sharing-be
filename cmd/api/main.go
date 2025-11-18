@@ -63,20 +63,22 @@ func main() {
 		authed.Use(authMiddleware)
 		{
 			authed.GET("/me", userHandler.GetCurrentUser)
-			authed.POST("/v1/files", fileHandler)
-			authed.GET("/v1/files", listFilesHandler)
-            // report endpoints
-            authed.POST("/v1/files/:file_id/report-complete", reportCompleteHandler)
-            authed.GET("/v1/files/:file_id/report", getReportHandler)
+
+			// Router for file and report
+			files := authed.Group("/v1/files")
+			files.POST("", fileHandler)
+			files.GET("", listFilesHandler)	
+			files.POST("/:file_id/report-complete", reportCompleteHandler)
+			files.GET("/:file_id/report", getReportHandler)
+
             authed.GET("/v1/upload-reports", listReportsHandler)
-			authed.POST("/v1/shares/:id/revoke", shareHandler.HandleRevoke)
-			// authorize password endpoint
-			authed.POST("/v1/shares/:id/authorize", authorizePasswordHandler.HandleAuthorizePassword)
-
-			authed.GET("/v1/shares", shareHandler.HandleListShares)
-
-			// get metadata 
-    		authed.GET("/v1/shares/:id", shareHandler.HandleGetShareMetadata)
+			
+			//  Router for shares
+			shares := authed.Group("/v1/shares")
+			shares.POST("/:id/revoke", shareHandler.HandleRevoke)
+			shares.POST("/:id/authorize", authorizePasswordHandler.HandleAuthorizePassword)
+			shares.GET("", shareHandler.HandleListShares)
+			shares.GET("/:id", shareHandler.HandleGetShareMetadata)
 		}
 	}
 
