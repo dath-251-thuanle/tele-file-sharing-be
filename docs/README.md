@@ -513,96 +513,96 @@ _(Parse id = 10, chuẩn bị gọi API)_
 
 (Luồng GET /v1/shares/:id → authorize → download)
 
-1. Mục tiêu của flow
+##### 1\. Mục tiêu của flow
 
 Cho phép người nhận mở link chia sẻ và tải file.
 
-Logic: FE kiểm tra share bằng GET /v1/shares/:id → nếu hợp lệ thì tiếp tục authorize (nếu cần) → cuối cùng gọi download để lấy file.
+- **Logic:** FE kiểm tra share bằng `GET /v1/shares/:id` → nếu hợp lệ thì tiếp tục authorize (nếu cần) → cuối cùng gọi download để lấy file.
 
-2. Điều kiện kích hoạt (Trigger)
+##### 2\. Điều kiện kích hoạt (Trigger)
 
-Receiver: Mở link chia sẻ (URL chứa share_id)
+- **Receiver:** Mở link chia sẻ (URL chứa share_id)
 
-Backend Endpoint:
+- **Backend Endpoint:**
 
-GET /v1/shares/:id
+- `GET /v1/shares/:id`
 
-(nếu cần) POST /v1/shares/:id/authorize
+- (nếu cần) `POST /v1/shares/:id/authorize`
 
-GET /v1/shares/:id/download
+- `GET /v1/shares/:id/download`
 
-3. Các actor liên quan
+##### 3\. Các actor liên quan
 
-Receiver (User)
+- Receiver (User)
 
-FE Web / Client
+- FE Web / Client
 
-Backend API
+- Backend API
 
-Storage
+- Storage
 
-4. Conversation Flow (Chi tiết)
-4.1. Bước 1 – Người nhận mở link
+##### 4\. Conversation Flow (Chi tiết)
+###### 4.1. Bước 1 – Người nhận mở link
 
-FE gọi:
+**FE gọi:**
 
-GET /v1/shares/:id
+`GET /v1/shares/:id`
 
 
-Backend xử lý:
+**Backend xử lý:**
 
-Tìm share theo id.
+1. Tìm share theo id.
 
-Kiểm tra share có bị thu hồi, hết hạn, hoặc vượt số lượt tải.
+2. Kiểm tra share có bị thu hồi, hết hạn, hoặc vượt số lượt tải.
 
-Kiểm tra loại share (public/password/email).
+3. Kiểm tra loại share (public/password/email).
 
-Kết quả:
+**Kết quả:**
 
-200 OK: trả metadata file
+**200 OK:** trả metadata file
 
-4xx: share không hợp lệ
+**4xx:** share không hợp lệ
 
-4.2. Bước 2 – Authorize (nếu share bảo vệ)
+###### 4.2. Bước 2 – Authorize (nếu share bảo vệ)
 
-Password-protected:
-
+**Password-protected:**
+```json
 POST /v1/shares/:id/authorize
 {
   "password": "abc123"
 }
+```
 
+**Email-restricted (nếu có):**
 
-Email-restricted (nếu có):
+- FE gửi email
 
-FE gửi email
+- Nhập OTP
 
-Nhập OTP
+- Backend trả temporary_access_token
 
-Backend trả temporary_access_token
+###### 4.3. Bước 3 – Tải file
 
-4.3. Bước 3 – Tải file
-
-FE gọi:
-
+**FE gọi:**
+```json
 GET /v1/shares/:id/download
 Authorization: Bearer <temporary_access_token>  (nếu cần)
+```
 
+**Backend xử lý:**
 
-Backend xử lý:
+1. Validate token (nếu share yêu cầu).
 
-Validate token (nếu share yêu cầu).
+2. Kiểm tra lượt tải.
 
-Kiểm tra lượt tải.
+3. Tăng download_count.
 
-Tăng download_count.
+4. Stream file từ storage.
 
-Stream file từ storage.
+**Kết quả:**
+**200 OK (binary stream)**
 
-Kết quả:
-200 OK (binary stream)
-
-5. Error Handling
+##### 5\. Error Handling
    Tình huống| Bot phản hồi| Backend trả về
    | :--- | :--- | :--- |
    Sai password| “ Mật khẩu không đúng.”| INVALID_PASSWORD
