@@ -333,15 +333,15 @@ paths:
         Backend sẽ tự động tạo một 'hash' duy nhất cho link.
       tags:
         - Shares
-      parameters:
+      paramethers:
         - $ref: "#/components/parameters/TelegramUserId"
         - $ref: "#/components/parameters/TelegramUsername"
       requestBody:
         required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateShareRequest"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/CreateShareRequest"
 
       responses:
         "201":
@@ -846,7 +846,7 @@ components:
           type: string
           format: password
           description: Mật khẩu tùy chọn cho link share.
-          example: "matkhau123"
+          example: "my-secret-pass-123"
         expires_at:
           type: string
           format: date-time

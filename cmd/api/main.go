@@ -92,9 +92,6 @@ func main() {
             authed.POST("/v1/files/:file_id/report-complete", reportCompleteHandler)
             authed.GET("/v1/files/:file_id/report", getReportHandler)
             authed.GET("/v1/upload-reports", listReportsHandler)
-
-			// flow 3.5: /share
-			authed.POST("v1/shares", shareHandler.HandleCreateShare)
 			authed.POST("/v1/shares/:id/revoke", shareHandler.HandleRevoke)
 			// authorize password endpoint
 			authed.POST("/v1/shares/:id/authorize", authorizePasswordHandler.HandleAuthorizePassword)

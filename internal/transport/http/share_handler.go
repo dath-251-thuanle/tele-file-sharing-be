@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+
 	"file-sharing/internal/share"
 
 	"github.com/gin-gonic/gin"
@@ -159,34 +160,4 @@ func (h *ShareHandler) HandleGetShareMetadata(c *gin.Context) {
 
     // 4. Trả về JSON
     c.JSON(http.StatusOK, data)
-}
-
-// Khởi tạo 1 chia sẻ mới 
-// POST v1/shares
-func (h *ShareHandler) HandleCreateShare(c *gin.Context) {
-	user, exists := GetUserFromContext(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error" : "Unauthorized"})
-		return
-	}
-
-	var req share.CreateShareRequest
-
-	if err := c.ShouldBindJSON(&req); err != nil {    
-        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body: " + err.Error()}) 
-        return
-    }
-
-	// validation 
-	if req.FileID <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error" : "file_id is required"})
-		return 
-	}
-
-	createdShare, err := h.service.CreateShare(c.Request.Context(), user.ID, &req)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error" : "[debug] Failed to create share"})
-	}
-
-	c.JSON(http.StatusCreated, createdShare)
 }
