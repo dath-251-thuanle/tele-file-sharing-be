@@ -4,6 +4,7 @@ import (
 	"file-sharing/internal/config"
 	"file-sharing/internal/share"
 	"file-sharing/internal/storage"
+	"file-sharing/internal/files"
 	"file-sharing/internal/transport/http"
 	"log"
 
@@ -39,13 +40,21 @@ func main() {
 	minioEndpoint := os.Getenv("MINIO_ENDPOINT")
 	minioBucket := os.Getenv("MINIO_BUCKET")
 	var minioRepo *storage.MinioRepo
+	if minioEndpoint == "" || minioBucket == "" {
+    // Nếu bạn muốn tính năng upload là BẮT BUỘC, hãy crash server
+    log.Fatalf("MINIO_ENDPOINT or MINIO_BUCKET not set. Cannot run file service.")
+}
 	if minioEndpoint != "" && minioBucket != "" {
 		minioAccess := os.Getenv("MINIO_ACCESS_KEY")
 		minioSecret := os.Getenv("MINIO_SECRET_KEY")
+		// NÊN thêm log này để xác nhận:
+if minioAccess == "" {
+    log.Fatalf("FATAL: MINIO_ACCESS_KEY is empty despite loading config.")
+}
 		useSSL := strings.ToLower(os.Getenv("MINIO_USE_SSL")) == "true"
 		mr, err := storage.NewMinioRepo(minioEndpoint, minioAccess, minioSecret, minioBucket, useSSL)
 		if err != nil {
-			log.Printf("failed to init minio repo: %v", err)
+			log.Fatalf("Failed to initialize MinIO repository: %v", err)
 		} else {
 			minioRepo = mr
 		}
@@ -53,7 +62,10 @@ func main() {
 	// Khởi tạo File Repository (Đã sửa lỗi hàm khởi tạo) - nguyen_trung_kien_addded
 	fileRepo := storage.NewPostgresFileRepository(db)
 	shareRepo := storage.NewShareRepository(db, minioRepo)
-
+	// *** FIX 1: Khởi tạo File Service ở đây, trước khi dùng nó ***
+  // files là tên package của internal/files/service.go
+  fileService := files.NewFileService(db.DB, fileRepo)
+  // ************************************************************
 	// ---- 3. Khởi tạo Gin Router ----
 	router := gin.Default()
 
@@ -66,7 +78,7 @@ func main() {
 	// ---- 4. Khởi tạo Handlers & Middlewares ----
 	userHandler := http.NewUserHandler()
 	authMiddleware := http.AuthMiddleware(userRepo)
-	fileHandler := http.NewFileHandler(fileRepo, minioRepo)
+	fileHandler := http.NewFileHandler(fileRepo, minioRepo, fileService)
 	listFilesHandler := http.ListUserFilesHandler(db.DB)
 	shareHandler := http.NewShareHandler(shareService)
 	// Authoize Password Handler

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 	"time"
-
+	"errors"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -22,6 +22,17 @@ func NewMinioRepo(endpoint, accessKey, secretKey, bucket string, useSSL bool) (*
 	if err != nil {
 		return nil, err
 	}
+
+	// *** FIX: Thêm kiểm tra nếu MinIO client bị nil mà không có lỗi (Vấn đề logic) ***
+	if minioClient == nil {
+		return nil, errors.New("minio client initialization failed without explicit error")
+	}
+	// *********************************************************************************
+
+	// Kiểm tra kết nối (Tuyệt vời nếu bạn có thể ping MinIO tại đây)
+	// Ví dụ: _, err = minioClient.BucketExists(context.Background(), bucket)
+    // Nếu có lỗi, bạn cũng nên trả về nil, err
+
 	return &MinioRepo{client: minioClient, bucketName: bucket}, nil
 }
 

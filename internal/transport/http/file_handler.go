@@ -10,12 +10,18 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-
+	"file-sharing/internal/files"
 	"file-sharing/internal/model"
 
 	"github.com/gin-gonic/gin"
 )
-
+// Khai báo FileService interface (Chỉ định nghĩa những gì bạn cần, hoặc toàn bộ)
+type FileService interface {
+	// Định nghĩa các phương thức từ files/service.go mà handler cần
+	ReportUploadComplete(ctx context.Context, userID, fileID int64, req *files.ReportUploadCompleteRequest) (*files.ReportUploadCompleteResponse, error)
+	GetUploadReport(ctx context.Context, userID, fileID int64) (*model.UploadReport, error)
+	ListUploadReports(ctx context.Context, userID int64, limit, offset int) ([]model.UploadReport, error)
+}
 // Khai báo các Interface cần dùng (để tránh dependency vòng)
 // Lấy từ storage/file.go
 type FileRepository interface {
@@ -30,12 +36,14 @@ type MinioService interface {
 type FileHandler struct {
 	fileRepo FileRepository
 	minioSvc MinioService
+	fileSvc  FileService // *** ĐÃ THÊM: Biến FileService ***
 }
 
-func NewFileHandler(fileRepo FileRepository, minioSvc MinioService) *FileHandler {
+func NewFileHandler(fileRepo FileRepository, minioSvc MinioService, fileSvc FileService) *FileHandler {
 	return &FileHandler{
 		fileRepo: fileRepo,
 		minioSvc: minioSvc,
+		fileSvc: fileSvc, // Khởi tạo Service
 	}
 }
 
@@ -271,7 +279,7 @@ func ReportUploadCompleteHandler(db *sql.DB) gin.HandlerFunc {
 		// Step 2: Verify file belongs to user
 		var existingFileID int64
 		err = db.QueryRow(`
-			SELECT id FROM files 
+			SELECT id FROM files
 			WHERE id = $1 AND owner_user_id = $2
 		`, fileID, userID).Scan(&existingFileID)
 		if err == sql.ErrNoRows {

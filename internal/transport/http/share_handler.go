@@ -92,7 +92,7 @@ func (h *ShareHandler) HandleListShares(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// GET /v1/shares/:id/download
+// GET ßv1/shares/:id/download
 func (h *ShareHandler) HandleDownload(c *gin.Context) {
 	// auth + parse id
 	user, ok := GetUserFromContext(c)
